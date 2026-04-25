@@ -156,11 +156,80 @@ Ele é ótimo para estudos porque:
 - funciona bem em ambiente local
 - facilita testar manifestos sem depender de cloud
 
-Exemplo de criação de cluster:
+Exemplo de criação de cluster usado neste repositório:
 
 ```powershell
-k3d cluster create meucluster
+k3d cluster create meucluster --servers 2 --agents 2 -p "9800:30000@loadbalancer"
 ```
+
+Esse comando faz o seguinte:
+
+- cria um cluster chamado `meucluster`
+- sobe `2` nós `server`, que representam o plano de controle do `k3s`
+- sobe `2` nós `agent`, que funcionam como workers para executar pods
+- mapeia a porta `9800` da sua máquina para a porta `30000` do `loadbalancer` do `k3d`
+
+Na prática, isso é útil porque a `Aula01` publica a aplicação com `NodePort` na porta `30000`, e o mapeamento permite acessar localmente por:
+
+```text
+http://localhost:9800
+```
+
+### Exemplos úteis com k3d
+
+Listar clusters criados:
+
+```powershell
+k3d cluster list
+```
+
+Ver os nodes disponíveis no Kubernetes:
+
+```powershell
+kubectl get nodes
+```
+
+Ver os containers do cluster no Docker:
+
+```powershell
+k3d node list
+```
+
+Parar o cluster:
+
+```powershell
+k3d cluster stop meucluster
+```
+
+Iniciar novamente:
+
+```powershell
+k3d cluster start meucluster
+```
+
+Remover o cluster:
+
+```powershell
+k3d cluster delete meucluster
+```
+
+### Relação entre `k3d`, `Service` e `NodePort`
+
+No fluxo deste repositório:
+
+- o `Deployment` cria os pods da aplicação
+- o `Service` do tipo `NodePort` expõe a aplicação internamente na porta `30000`
+- o `k3d` faz o mapeamento da porta `9800` da máquina host para essa porta publicada no cluster
+
+Resumo do caminho da requisição:
+
+- `localhost:9800` na sua máquina
+- `loadbalancer` do `k3d`
+- `NodePort 30000` no cluster
+- `Service`
+- pods da aplicação
+
+Se você estiver usando a `Aula01`, esse mapeamento é o cenário recomendado para acessar a aplicação de forma mais simples no navegador.
 
 ## Estrutura do repositório
 
